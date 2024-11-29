@@ -15,7 +15,7 @@ func CleanPeers() {
 	}
 
 	for {
-		thirtyMinutesAgo := time.Now().Add(-30 * time.Minute)
+		thirtyMinutesAgo := time.Now().Add(-5 * time.Minute)
 
 		var peers []model.Peer
 		result := db.Where("updated_at < ?", thirtyMinutesAgo).Find(&peers)
@@ -25,8 +25,11 @@ func CleanPeers() {
 			return
 		}
 
-		for _, peer := range peers {
+		if len(peers) > 0 {
 			fmt.Println("removed dead peers:", len(peers))
+		}
+
+		for _, peer := range peers {
 			db.Delete(peer)
 		}
 

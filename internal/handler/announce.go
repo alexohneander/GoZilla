@@ -10,6 +10,7 @@ import (
 	"github.com/alexohneander/GoZilla/internal/database"
 	"github.com/alexohneander/GoZilla/pkg/model"
 	"github.com/gin-gonic/gin"
+	"github.com/marksamman/bencode"
 )
 
 func Announce(c *gin.Context) {
@@ -27,13 +28,21 @@ func Announce(c *gin.Context) {
 
 	db.Save(&peer)
 
-	c.String(200, "Announce")
+	peers, err := getPeerListForInfoHash(peer)
+	if err != nil {
+		c.String(503, "Database Error")
+		return
+	}
+
+	bencodeDict := writeBencodeDict(peers)
+
+	c.String(200, bencodeDict)
 }
 
 func parseAnnounceRequest(c *gin.Context) (model.Peer, error) {
 	peer := model.Peer{}
 
-	peer.InfoHash = c.Query("info_hash")
+	peer.InfoHash = base64.StdEncoding.EncodeToString([]byte(c.Query("info_hash")))
 	peer.PeerID = c.Query("peer_id")
 
 	if peer.InfoHash == "" || peer.PeerID == "" {
@@ -85,6 +94,77 @@ func parseAnnounceRequest(c *gin.Context) (model.Peer, error) {
 		peer.Left = int64(parsedLeft)
 	}
 
+	if c.Query("compact") != "" {
+		parsedCompact, err := strconv.ParseBool(c.Query("compact"))
+		if err != nil {
+			return model.Peer{}, err
+		}
+		peer.Compact = parsedCompact
+	}
+
+	if c.Query("no_peer_id") != "" {
+		peer.NoPeerID = c.Query("no_peer_id")
+	}
+
+	if c.Query("event") != "" {
+		peer.Event = c.Query("event")
+	}
+
+	if c.Query("numwant") != "" {
+		parsedNumWant, err := strconv.ParseInt(c.Query("numwant"), 0, 32)
+		if err != nil {
+			return model.Peer{}, err
+		}
+		peer.NumWant = int32(parsedNumWant)
+	}
+
+	if c.Query("key") != "" {
+		peer.Key = c.Query("key")
+	}
+
+	// if c.Query("tracker") != "" {
+	// 	peer.Key = c.Query("key")
+	// }
+
 	peer.UpdatedAt = time.Now()
 	return peer, nil
+}
+
+func getPeerListForInfoHash(peer model.Peer) ([]model.Peer, error) {
+	var peers []model.Peer
+
+	db, err := database.GetDB()
+	if err != nil {
+		return []model.Peer{}, nil
+	}
+
+	db.Where("info_hash = ?", peer.InfoHash).Find(&peers)
+
+	return peers, nil
+}
+
+func writeBencodeDict(peers []model.Peer) string {
+	peersArray := make([]interface{}, len(peers))
+
+	for index, peer := range peers {
+		peerDict := make(map[string]interface{})
+		if peer.NoPeerID != "" {
+			peerDict["id"] = ""
+		} else {
+			peerDict["id"] = peer.PeerID
+		}
+
+		peerDict["ip"] = peer.IP
+		peerDict["port"] = peer.Port
+		peersArray[index] = peerDict
+	}
+
+	dict := make(map[string]interface{})
+	dict["interval"] = 60
+	dict["peers"] = peersArray
+
+	bencodeDict := bencode.Encode(dict)
+	fmt.Printf("bencode encoded dict: %s\n", bencodeDict)
+
+	return string(bencodeDict)
 }
