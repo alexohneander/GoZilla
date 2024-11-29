@@ -18,14 +18,18 @@ func CleanPeers() {
 		thirtyMinutesAgo := time.Now().Add(-30 * time.Minute)
 
 		var peers []model.Peer
-		result := db.Find(&peers).Where("updated_at < ?", thirtyMinutesAgo)
+		result := db.Where("updated_at < ?", thirtyMinutesAgo).Find(&peers)
 
 		if result.Error != nil {
 			fmt.Println("Fehler beim Abrufen der Peers:", result.Error)
 			return
 		}
 
-		fmt.Println("Peers älter als 30 Minuten:", len(peers))
+		for _, peer := range peers {
+			fmt.Println("removed dead peers:", len(peers))
+			db.Delete(peer)
+		}
+
 		time.Sleep(10 * time.Second)
 	}
 
