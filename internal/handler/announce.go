@@ -105,6 +105,18 @@ func parseAnnounceRequest(c *gin.Context) (model.Peer, error) {
 		if err != nil {
 			return model.Peer{}, err
 		}
+
+		/* We want to check if the Client is a Seeder or a Leecher.
+		We can do this by checking what the client needs to download. Is the left > 0 then we know the client is a Leecher.
+		Otherwise the client is a Seeder. */
+		if parsedLeft > 0 {
+			peer.Category = "Leecher"
+		} else if c.Query("event") == "completed" {
+			peer.Category = "Seeder"
+		} else if parsedLeft == 0 {
+			peer.Category = "Seeder"
+		}
+
 		peer.Left = int64(parsedLeft)
 	}
 
@@ -129,16 +141,12 @@ func parseAnnounceRequest(c *gin.Context) (model.Peer, error) {
 		if err != nil {
 			return model.Peer{}, err
 		}
-		peer.NumWant = int32(parsedNumWant)
+		peer.NumWant = int(parsedNumWant)
 	}
 
 	if c.Query("key") != "" {
 		peer.Key = c.Query("key")
 	}
-
-	// if c.Query("tracker") != "" {
-	// 	peer.Key = c.Query("key")
-	// }
 
 	peer.UpdatedAt = time.Now()
 	return peer, nil
@@ -152,7 +160,23 @@ func getPeerListForInfoHash(peer model.Peer) ([]model.Peer, error) {
 		return []model.Peer{}, nil
 	}
 
-	db.Where("info_hash = ?", peer.InfoHash).Find(&peers)
+	/* If the NumWant is greater than zero then we want to return that many peers.
+	If the NumWant is less than or equal to zero then we want to return our default limit (50 peers). */
+	var limit int = 50
+	if peer.NumWant > 0 {
+		limit = int(peer.NumWant)
+	}
+
+	/* If the client is a Leecher then we want to return the peers that are Seeders.
+	If the client is a Seeder then we want to return the peers that are Leechers.
+	Otherwise we returning all peers that are Leechers or Seeders. */
+	if peer.Category == "Leecher" {
+		db.Where("info_hash = ?", peer.InfoHash).Where("category = ?", "Seeder").Limit(limit).Find(&peers)
+	} else if peer.Category == "Seeder" {
+		db.Where("info_hash =?", peer.InfoHash).Where("category = ?", "Leecher").Limit(limit).Find(&peers)
+	} else {
+		db.Where("info_hash =?", peer.InfoHash).Limit(limit).Find(&peers)
+	}
 
 	return peers, nil
 }

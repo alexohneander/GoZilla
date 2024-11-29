@@ -8,6 +8,7 @@ type Peer struct {
 	ID         string `gorm:"primary_key"`
 	InfoHash   string `gorm:"index"`
 	PeerID     string `gorm:"index"`
+	Category   string
 	Port       int32
 	Uploaded   int64
 	Downloaded int64
@@ -16,7 +17,7 @@ type Peer struct {
 	NoPeerID   string
 	Event      string
 	IP         string
-	NumWant    int32
+	NumWant    int
 	Key        string
 	TrackerID  string
 	CreatedAt  time.Time
