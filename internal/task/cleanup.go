@@ -35,5 +35,27 @@ func CleanPeers() {
 
 		time.Sleep(10 * time.Second)
 	}
+}
 
+func ForceCleanPeers() {
+	db, err := database.GetDB()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var peers []model.Peer
+	result := db.Find(&peers)
+
+	if result.Error != nil {
+		fmt.Println("Fehler beim Abrufen der Peers:", result.Error)
+		return
+	}
+
+	if len(peers) > 0 {
+		fmt.Println("removed peers:", len(peers))
+	}
+
+	for _, peer := range peers {
+		db.Delete(peer)
+	}
 }
