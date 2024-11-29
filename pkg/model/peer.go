@@ -8,7 +8,7 @@ type Peer struct {
 	ID         string `gorm:"primary_key"`
 	InfoHash   string `gorm:"index"`
 	PeerID     string `gorm:"index"`
-	Category   string
+	Category   string `gorm:"index"`
 	Port       int32
 	Uploaded   int64
 	Downloaded int64
