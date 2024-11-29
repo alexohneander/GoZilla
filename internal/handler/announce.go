@@ -1,16 +1,18 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"time"
 
 	"github.com/alexohneander/GoZilla/internal/database"
 	"github.com/alexohneander/GoZilla/pkg/model"
 	"github.com/gin-gonic/gin"
-	"github.com/marksamman/bencode"
+	bencode "github.com/jackpal/bencode-go"
 )
 
 func Announce(c *gin.Context) {
@@ -168,8 +170,12 @@ func writeBencodeDict(peers []model.Peer) string {
 	dict["interval"] = 60
 	dict["peers"] = peersArray
 
-	bencodeDict := bencode.Encode(dict)
-	fmt.Printf("bencode encoded dict: %s\n", bencodeDict)
+	var bencodedDict bytes.Buffer
+	err := bencode.Marshal(&bencodedDict, dict)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("bencode encoded dict: %s\n", bencodedDict.String())
 
-	return string(bencodeDict)
+	return string(bencodedDict.String())
 }

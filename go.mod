@@ -4,7 +4,7 @@ go 1.22.3
 
 require (
 	github.com/gin-gonic/gin v1.10.0
-	github.com/marksamman/bencode v0.0.0-20150821143521-dc84f26e086e
+	github.com/jackpal/bencode-go v1.0.2
 	github.com/spf13/cobra v1.8.1
 	gorm.io/driver/sqlite v1.5.6
 	gorm.io/gorm v1.25.12
