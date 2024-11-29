@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/alexohneander/GoZilla/internal/database"
 	"github.com/alexohneander/GoZilla/pkg/model"
@@ -84,5 +85,6 @@ func parseAnnounceRequest(c *gin.Context) (model.Peer, error) {
 		peer.Left = int64(parsedLeft)
 	}
 
+	peer.UpdatedAt = time.Now()
 	return peer, nil
 }

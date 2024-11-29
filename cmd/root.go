@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/alexohneander/GoZilla/internal/http"
+	"github.com/alexohneander/GoZilla/internal/task"
 	"github.com/spf13/cobra"
 )
 
@@ -13,6 +14,7 @@ var rootCmd = &cobra.Command{
 	Short: "GoZilla is a very fast and simple BitTorrent Tracker",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
+		go task.CleanPeers()
 		http.Server()
 	},
 }
