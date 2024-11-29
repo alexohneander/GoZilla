@@ -21,5 +21,5 @@ type Peer struct {
 	Key        string
 	TrackerID  string
 	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	UpdatedAt  time.Time `gorm:"index"`
 }
