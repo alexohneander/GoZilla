@@ -10,9 +10,16 @@ import (
 	"time"
 
 	"github.com/alexohneander/GoZilla/internal/database"
+	"github.com/alexohneander/GoZilla/internal/helper"
 	"github.com/alexohneander/GoZilla/pkg/model"
 	"github.com/gin-gonic/gin"
 	bencode "github.com/jackpal/bencode-go"
+)
+
+var (
+	announceInterval    = 1800
+	minAnnounceInterval = 900
+	maxAccounceDrift    = 300
 )
 
 func Announce(c *gin.Context) {
@@ -156,9 +163,9 @@ func writeBencodeDict(peers []model.Peer) string {
 	for index, peer := range peers {
 		peerDict := make(map[string]interface{})
 		if peer.NoPeerID != "" {
-			peerDict["id"] = ""
+			peerDict["peer id"] = ""
 		} else {
-			peerDict["id"] = peer.PeerID
+			peerDict["peer id"] = peer.PeerID
 		}
 
 		peerDict["ip"] = peer.IP
@@ -167,7 +174,13 @@ func writeBencodeDict(peers []model.Peer) string {
 	}
 
 	dict := make(map[string]interface{})
-	dict["interval"] = 60
+
+	/* We ask clients to announce each interval seconds. In order to spread the load on tracker,
+	we will vary the interval given to client by random number of seconds between 0 and value
+	specified in the Variables */
+	dict["interval"] = announceInterval + helper.UnsafeIntn(maxAccounceDrift)
+	dict["min interval"] = minAnnounceInterval
+
 	dict["peers"] = peersArray
 
 	var bencodedDict bytes.Buffer
