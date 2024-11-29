@@ -20,8 +20,9 @@ The purpose of this project is to learn about the inner workings of a BitTorrent
 This project relies on the following dependencies:
 
 - github.com/spf13/cobra for CLI functionality
-- github.com/gin-gonic/gin (indirectly required by Cobra)
+- github.com/gin-gonic/gin for HTTP server functionality
 - gorm.io/gorm and gorm.io/driver/sqlite for database management
+- github.com/jackpal/bencode-go for encoding/decoding BitTorrent metadata files
 
 ### Running the Project
 
