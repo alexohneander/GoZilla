@@ -30,6 +30,7 @@ func Announce(c *gin.Context) {
 
 	peers, err := getPeerListForInfoHash(peer)
 	if err != nil {
+		c.Writer.Header().Set("Content-Type", "text/plain")
 		c.String(503, "Database Error")
 		return
 	}
@@ -54,6 +55,10 @@ func parseAnnounceRequest(c *gin.Context) (model.Peer, error) {
 	// Get IP Address
 	if c.Query("ip") != "" {
 		peer.IP = c.Query("ip")
+	} else if c.Query("ipv4") != "" {
+		peer.IP = c.Query("ipv4")
+	} else if c.Query("ipv6") != "" {
+		peer.IP = c.Query("ipv6")
 	} else {
 		peer.IP = c.RemoteIP()
 	}

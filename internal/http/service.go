@@ -12,5 +12,5 @@ func Server() {
 	router.GET("/announce", handler.Announce)
 	router.GET("/scrape", handler.Scrape)
 
-	router.Run(":4000") // listen and serve on 0.0.0.0:8080
+	router.Run(":4000") // listen and serve on 0.0.0.0:4000
 }
